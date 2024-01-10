@@ -1,0 +1,3 @@
+[submodule "audioplus"]
+	path = audioplus
+	url = https://github.com/wrongbad/audioplus.git
