@@ -47,13 +47,24 @@ struct AutoRecorder
     bool recording = false;
     int16_t min_amp = 10;
     float idle = 999;
-    float max_idle = 5.0;
+    float max_idle = 2.0;
     double t0 = 0;
 
-    bool running() const { return audio_stream.running(); }
+    bool dead = false;
+
+    bool running()
+    { 
+        if(!audio_stream.running()) { return false; }
+        bool was_running = !dead;
+        dead = true;
+        return was_running;
+    }
 
     void restart()
     {
+        wav.finish();
+        recording = false;
+
         // close before restarting session
         audio_stream.close();
         midi_stream.close();
@@ -91,6 +102,7 @@ struct AutoRecorder
             sample_rate = config.sample_rate; // updated in open()
 
             audio_stream.start();
+            dead = false;
 
             break;
         }
@@ -124,6 +136,8 @@ struct AutoRecorder
 
     int on_audio(int16_t const* in, int16_t * out, int frames, AudioStream::Status const& status)
     {
+        if(frames > 0) { dead = false; }
+
         double t = status.input_hw_time;
 
         int16_t amp = 0;
